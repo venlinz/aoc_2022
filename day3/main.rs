@@ -1,88 +1,72 @@
 use std::fs;
 use std::collections::HashSet;
+use std::time::Instant;
 
 fn main() {
     let file_path = "./input.txt";
     let input = fs::read_to_string(file_path)
         .unwrap();
-    let mut sum = 0;
-    let mut sum_part2 = 0;
 
+    let start = Instant::now();
+    part1(input.clone());
+    part2(input);
+    let duration = start.elapsed();
+    println!("duration: {:?}", duration);
+}
+
+// Find the item type that appears in both compartments of each rucksack.
+// What is the sum of the priorities of those item types?
+fn part1(input: String) {
+    let mut sum = 0;
+    for rucksack in input.lines() {
+        let item_priority = match find_common_item_in_compartments(rucksack.to_string()) {
+            Some(x) => get_item_priority(x),
+            None => 0,
+        };
+        sum += item_priority;
+    }
+    println!("new part1 sum: {sum}");
+}
+
+fn find_common_item_in_compartments(rucksack: String) -> Option<char> {
+    let (compartment1, compartment2) = rucksack.split_at(rucksack.len()/2);
+    // println!("{}, {}", compartment1, compartment2);
+    for c in compartment1.chars() {
+        if compartment2.contains(c) {
+            return Some(c);
+        }
+    }
+    None
+}
+
+fn get_item_priority(item: char) -> i32 {
     const LOWER_CASE: i32 = 96;
     const UPPER_CASE_OFFSET: i32 = 26;
     const UPPER_CASE: i32 = 64;
-    const GROUP_SIZE: usize = 3;
-    let mut first_elf: HashSet<char> = HashSet::new();
-    let mut second_elf: HashSet<char> = HashSet::new();
-    let mut third_elf: HashSet<char> = HashSet::new();
-
-    for (i, line) in input.lines().enumerate() {
-        let modder = i + 1;
-
-        let mut line = line.to_string();
-        let mut compartment2 = line.split_off(line.len()/2);
-        let compartment1 = line;
-
-        // part 1
-        for c in compartment1.chars() {
-            if modder % GROUP_SIZE == 1 {
-                first_elf.insert(c);
-            } 
-            if modder % GROUP_SIZE == 2 {
-                second_elf.insert(c);
-            } 
-            if modder % GROUP_SIZE == 0 {
-                third_elf.insert(c);
-            }
-            if compartment2.contains(c) {
-                if c.is_ascii_lowercase() {
-                    let t = c as i32 - LOWER_CASE;
-                    sum += t;
-                } else {
-                    let t = c as i32 - UPPER_CASE + UPPER_CASE_OFFSET;
-                    sum += t;
-                }
-                compartment2 = compartment2.replace(c, " ");
-            }
-        }
-
-        // part2
-        for c in compartment2.chars() {
-            if modder % GROUP_SIZE == 1 {
-                first_elf.insert(c);
-            } 
-            if modder % GROUP_SIZE == 2 {
-                second_elf.insert(c);
-            } 
-            if modder % GROUP_SIZE == 0 {
-                third_elf.insert(c);
-            }
-        }
-
-        if modder % GROUP_SIZE == 0 {
-            for c in &first_elf {
-                if !second_elf.contains(&c) {
-                    continue;
-                } 
-                if !third_elf.contains(&c) {
-                    continue;
-                }
-                if *c == ' ' {
-                    continue;
-                }
-                if c.is_ascii_lowercase() {
-                    let t = *c as i32 - LOWER_CASE;
-                    sum_part2 += t;
-                } else {
-                    let t = *c as i32 - UPPER_CASE + UPPER_CASE_OFFSET;
-                    sum_part2 += t;
-                }
-            }
-            first_elf = HashSet::new();
-            second_elf = HashSet::new();
-            third_elf = HashSet::new();
-        }
+    if item.is_ascii_lowercase() {
+        item as i32 - LOWER_CASE
+    } else {
+        item as i32 - UPPER_CASE + UPPER_CASE_OFFSET
     }
-    println!("sum: {sum}");
-    println!("sum part2: {sum_part2}");
+}
+
+// Find the item type that corresponds to the badges of each three-Elf group.
+// What is the sum of the priorities of those item types?
+fn part2(input: String) {
+    let lines: Vec<&str> = input.lines().collect();
+    let mut sum = 0;
+    for i in (0..lines.len()).step_by(3) {
+        let common_among_group_of_3 = get_intersect_of_3(
+            lines[i].chars().collect(),
+            lines[i + 1].chars().collect(),
+            lines[i + 2].chars().collect());
+        sum += get_item_priority(common_among_group_of_3);
+    }
+    println!("sum part2: {sum}");
+}
+
+fn get_intersect_of_3(sack1: HashSet<char>, sack2: HashSet<char>, sack3: HashSet<char>) -> char {
+    let intersect_s1_s2: HashSet<char> = sack1.intersection(&sack2).into_iter().cloned().collect::<HashSet<char>>();
+    let intersect_of_all_3 = intersect_s1_s2.intersection(&sack3);
+    return intersect_of_all_3.into_iter().next().unwrap().clone();
 }

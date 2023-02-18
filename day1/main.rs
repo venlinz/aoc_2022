@@ -1,6 +1,16 @@
 use std::fs;
+use std::time::Instant;
 
 fn main() {
+    let start = Instant::now();
+    for _ in 0..1 {
+        run();
+    }
+    let duration = start.elapsed();
+    println!("duration: {:?}", duration);
+}
+
+fn run() {
     let input = fs::read_to_string("./input.txt").unwrap(); 
     let mut max: usize = 0;
     let mut cur_elf: usize = 0;
