@@ -1,8 +1,11 @@
 use std::fs;
 use std::cmp;
+use std::time::Instant;
 
 fn main() {
     let input = fs::read_to_string("./input.txt").unwrap(); 
+
+    let start = Instant::now();
 
     let mut count = 0;
     let mut overlap_cnt = 0;
@@ -29,6 +32,9 @@ fn main() {
             }
         }
     }
+    let duration = start.elapsed();
+    println!("duration: {:?}", duration);
+
     println!("count: {count}");
     println!("overlap_cnt: {overlap_cnt}");
 }
